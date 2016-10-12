@@ -1,2 +1,8 @@
 # RPI-Masters-Project
-Directed, Unbiased, Random Walk for sampling of directed graphs, Stat Generation for the graphs in order to analyze the randomness, and Test Code
+1. Directed, Unbiased, Random Walk for sampling of directed graphs
+2. Statistic Generation for the input graphs
+    a. OutDegree Distribution
+    b. InDegree Distribution
+    c. Clustering Coefficient
+    d. Triadic closure (maybe)
+3. Test Code
