@@ -10,7 +10,7 @@ def sample(inFile, outFileG, outFileP, iternum, weight, count):
 
 	#Creates a Directed Graph to load the data into
 	G1 = nx.DiGraph()
-	print(weight)
+	#print(weight)
 
 	#Parses each line and adds an edge. 
 	#Since the underlying structure is a dictionary

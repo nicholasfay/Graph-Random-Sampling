@@ -42,7 +42,7 @@ def main():
 				graphs.append(sample(file, args.outFileG, args.outFileP, args.iternum, weight, count))
 	else:
 		print("Input Directory Doesn't Exist - Insert New Directory")
-	print(len(sum(graphs, [])))
+	#print(len(sum(graphs, [])))
 
 if __name__ == '__main__':
 	main()
