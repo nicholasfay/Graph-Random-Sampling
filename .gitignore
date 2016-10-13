@@ -2,4 +2,5 @@
 *.txt
 DURW/
 testGraphs/
+stats/
 *.pyc

@@ -1,5 +1,6 @@
 from __future__ import print_function
 from sampleDURW import sample
+from generateStats import graphSampleStatistics,graphStatistics
 import argparse
 import os
 
@@ -26,7 +27,6 @@ def main():
 	#perform sampleDURW on each graph, for number of times specified by amount, starting at bw, incrementing by increment each time
 	#number of sampling rounds for underlying sampling function
 	path = args.inDir
-	graphs = []
 	if(os.path.isdir(path)):
 		if not os.path.isabs(path):
 			path = os.path.abspath(path)
@@ -35,14 +35,17 @@ def main():
 			for i in range(0,args.amount):
 				if count == 0:
 					weight = args.bweight
-					count += 1
 				else:
 					weight = weight + args.increment
 					count +=1
-				graphs.append(sample(file, args.outFileG, args.outFileP, args.iternum, weight, count))
+				#graphs.append(sample(file, args.outFileG, args.outFileP, args.iternum, weight, count))
+				graphs = sample(file, args.outFileG, args.outFileP, args.iternum, weight, count)
+				if count == 0:
+					graphStatistics(graphs[0], file.split('.')[0], weight)
+					count += 1
+				graphSampleStatistics(graphs[1], file.split('.')[0], weight)
 	else:
 		print("Input Directory Doesn't Exist - Insert New Directory")
-	#print(len(sum(graphs, [])))
 
 if __name__ == '__main__':
 	main()
