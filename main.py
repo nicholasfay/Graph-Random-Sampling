@@ -38,12 +38,14 @@ def main():
 				else:
 					weight = weight + args.increment
 					count +=1
+				inFile = os.path.dirname(os.path.abspath(__file__)) + "\\testGraphs\\" + file
 				#graphs.append(sample(file, args.outFileG, args.outFileP, args.iternum, weight, count))
-				graphs = sample(file, args.outFileG, args.outFileP, args.iternum, weight, count)
+				graphs = sample(inFile, args.outFileG, args.outFileP, args.iternum, weight, count)
 				if count == 0:
 					graphStatistics(graphs[0], file.split('.')[0], weight)
 					count += 1
 				graphSampleStatistics(graphs[1], file.split('.')[0], weight)
+			count = 0
 	else:
 		print("Input Directory Doesn't Exist - Insert New Directory")
 
