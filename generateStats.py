@@ -3,26 +3,40 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import argparse
 
-#TODO: Create outdegree distribution estimator based on paper
-def sampleOutDegree(G):
-	return G
+def outDegreeIndicator(G, j, node):
+	if(G.out_degree(node).values() == j):
+		return 1
+	return 0
+
+def inDegreeIndicator(G, j, node):
+	if(G.in_degree(node).values() == j):
+		return 1
+	return 0
+
+def distributionEstimator(topFunc, G, Gu, selected):
+	print(topFunc)
+	phi = []
+	n = len(selected)
+	#for node in selected:
+	return phi
+
 
 #Computes out_degree distribution, in_degree distribution
 #and clustering coefficient of sampled graph after DURW
-def graphSampleStatistics(G, inFile, w):
+def graphSampleStatistics(origG, sampledG, selected, inFile, w):
 	outName = 'stats/stats-{}-sample-w{}.txt'.format(inFile, str(w))
 	outFile = open(outName, 'w')
 	print('Statistics for input graph sample-{}-w{}'.format(inFile,str(w)), file=outFile)
 
-	nodes = G.nodes(data=True)
+	#nodes = G.nodes(data=True)
 	#for u in nodes:
 		#print(u, file=outFile)
 	#print(beta.rvs(2.31,0.627,size=1000))
 
-	#out_degree = 
-	#in_degree = 
+	out_degree = distributionEstimator(outDegreeIndicator, origG, sampledG, selected) 
+	in_degree =  distributionEstimator(inDegreeIndicator, origG, sampledG, selected)
 	print('Clustering Coefficient:', file=outFile)
-	cluster = nx.average_clustering(G)
+	cluster = nx.average_clustering(sampledG)
 	print(cluster, file=outFile)
 
 #Computes out_degree distribution, in_degree distribution
