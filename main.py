@@ -4,6 +4,7 @@ from generateStats import graphSampleStatistics,graphStatistics
 import argparse
 import os
 from datetime import datetime
+import profile
 startTime = datetime.now()
 
 def main():
@@ -17,7 +18,7 @@ def main():
 											help='Whether or not output images of graphs are wanted (May be very taxing with huge graphs)')
 	parser.add_argument('-it', '--iternum', type=int, default=20, 
 											help='Number of sampling rounds - Default is 20')
-	parser.add_argument('-bw', '--bweight', type=int, default=1,
+	parser.add_argument('-bw', '--bweight', type=float, default=1,
 											help='Weight of edges to determine frequency of random jumps (1:less -->  inf:more, w>0) - default is 10')
 	parser.add_argument('-incr', '--increment', type=int, default=1,
 											help='Amount to increment w by for each iteration of sampling')
@@ -54,8 +55,8 @@ def main():
 		print("Input Directory Doesn't Exist - Insert New Directory")
 
 if __name__ == '__main__':
+	#profile.run('main()')
 	main()
-
 	#Degree-proportional jumps
 	#Performs a jump (each iteration) to a uniformly chosen node(random.choise(uniform))
 	#This happens with probability w/(w+deg(v)) where deg(v) is the out

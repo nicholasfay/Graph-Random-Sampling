@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy.random as rnd
 import numpy as numpy
 import argparse
+import sys
 
 #This function implements the next node probability distribution calculations
 #It takes the graph and the current node, then calculates a distribution for all
@@ -53,13 +54,15 @@ def sample(inFile, outFileG, outFileP, iternum, weight, count, debug):
 			#Add edges as they are parsed
 			G1.add_edge(node1, node2, weight=1)
 
+	#Not possible to sample more nodes than given
+	if iternum > len(G1.nodes()):
+		sys.exit("Trying to sample more nodes than are given")
 	#Directed Sampling Algorithm Begin
 	#Assume that converging Gi (graph at ith step) to infinity gets you Gu (your final undirected sampled graph)
 
 	#Create the undirected graph, Gu
 	Gu = nx.Graph()
 	virtNode = 'virtNode'
-	#numpy.set_printoptions(threshold=numpy.nan)
 
 	#Use choice to select a random node from the set of all nodes in the graph
 	v = choice(G1.nodes())
@@ -83,7 +86,7 @@ def sample(inFile, outFileG, outFileP, iternum, weight, count, debug):
 		#Picking next node to sample using uniform distribution above across 
 		#all edges
 		edgelist = Gu.edges(v, data=True)
-		print(edgelist)
+		#print(edgelist)
 		seconds = [x[1] for x in edgelist]
 		picked_node = pickNextNode(Gu, v, selected, edgelist, seconds)
 
@@ -97,7 +100,9 @@ def sample(inFile, outFileG, outFileP, iternum, weight, count, debug):
 				#TODO: random uniform choice from all nodes or only nodes in Gu?
 				picked_node = rnd.choice(G1.nodes())
 		v = picked_node
-		selected.append(v)
+		#NOTE: For some reason int(v) needed to be used because picked_node was sometimes a string
+		#and sometimes an integer which was breaking the out_degree function
+		selected.append(int(v))
 		#print(selected)
 
 	#Exports the original graph (G1) and sampled graph (Gu) to a serialized GPickle

@@ -3,21 +3,48 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import argparse
 
+#Indicator functions
 def outDegreeIndicator(G, j, node):
-	if(G.out_degree(node).values() == j):
+	if(G.out_degree(node) == j):
 		return 1
 	return 0
 
 def inDegreeIndicator(G, j, node):
-	if(G.in_degree(node).values() == j):
+	if(G.in_degree(node) == j):
 		return 1
 	return 0
 
-def distributionEstimator(topFunc, G, Gu, selected):
-	print(topFunc)
-	phi = []
-	n = len(selected)
-	#for node in selected:
+#Calculating S for the steady state probability
+def calculateS(G, selected, w, n):
+	ret = 0
+	#Weird error that happens sometimes here, says that
+	#some of the nodes in the selected nodes aren't nodes in 
+	#the sampled graph
+	for item in selected:
+		ret += (1.0/(w + G.degree(item)))
+	return ret / n
+
+#Steady state probability of sampling a node
+def piFunc(G, item, w):
+	degree = G.degree(item)
+	return (w + degree)
+
+#Driver function to do in-degree and out-degree sample distribution estimators
+def distributionEstimator(topFunc, G, Gu, selected, inFile, w):
+	phi = {}
+	n = float(len(selected))
+	#print(n)
+	out_degree = G.out_degree(selected)
+	S = calculateS(Gu, selected, w, n)
+	out_degree_vals = sorted(set(out_degree.values()))
+	for item in out_degree_vals:
+		ret = 0
+		for item2 in selected:
+			indicator = topFunc(G, item, item2)
+			pi = piFunc(G, item2, w)
+			pi = pi * S
+			ret += (indicator / pi) / n
+		phi[item] = ret
 	return phi
 
 
@@ -28,13 +55,23 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w):
 	outFile = open(outName, 'w')
 	print('Statistics for input graph sample-{}-w{}'.format(inFile,str(w)), file=outFile)
 
-	#nodes = G.nodes(data=True)
-	#for u in nodes:
-		#print(u, file=outFile)
-	#print(beta.rvs(2.31,0.627,size=1000))
+	out_degree = distributionEstimator(outDegreeIndicator, origG, sampledG, selected, inFile, w) 
+	in_degree =  distributionEstimator(inDegreeIndicator, origG, sampledG, selected, inFile, w)
+	plt.figure()
+	plt.plot(out_degree.keys(), out_degree.values(), 'ro-')
+	plt.plot(in_degree.keys(), in_degree.values(), 'bv-')
+	#plt.yscale('log')
+	#plt.xscale('log')
+	plt.legend(['Out-degree', 'In-degree'])
+	plt.xlabel('Degree')
+	plt.ylabel('Percentage of nodes')
+	title = 'In-Degree and Out-Degree Distributions for {}'.format(inFile)
+	plt.title(title)
+	outGraph = 'stats/{}-degree-distribution-sample.jpg'.format(inFile)
+	plt.savefig(outGraph)
+	plt.close()
 
-	out_degree = distributionEstimator(outDegreeIndicator, origG, sampledG, selected) 
-	in_degree =  distributionEstimator(inDegreeIndicator, origG, sampledG, selected)
+	print('In-Degree and Out-Degree have been plotted and saved at {}'.format(outGraph), file=outFile)
 	print('Clustering Coefficient:', file=outFile)
 	cluster = nx.average_clustering(sampledG)
 	print(cluster, file=outFile)
@@ -49,15 +86,22 @@ def graphStatistics(G, inFile, w):
 	out_degree = G.out_degree()
 	out_degree_vals = sorted(set(out_degree.values()))
 	out_degree_distr = [out_degree.values().count(x) for x in out_degree_vals]
+	n1 = float(sum(out_degree_distr))
+	norm_out_degree_distr = [x/n1 for x in out_degree_distr]
 	in_degree = G.in_degree()
 	in_degree_vals = sorted(set(in_degree.values()))
 	in_degree_distr = [in_degree.values().count(x) for x in in_degree_vals]
+	n2 = float(sum(in_degree_distr))
+	norm_in_degree_distr = [x/n2 for x in in_degree_distr]
+	#print(norm_in_degree_distr)
 	plt.figure()
-	plt.loglog(out_degree_vals,out_degree_distr, 'ro-')
-	plt.loglog(in_degree_vals, in_degree_distr, 'bv-')
+	plt.plot(out_degree_vals, norm_out_degree_distr, 'ro-')
+	plt.plot(in_degree_vals, norm_in_degree_distr, 'bv-')
+	#plt.yscale('log')
+	#plt.xscale('log')
 	plt.legend(['Out-degree', 'In-degree'])
 	plt.xlabel('Degree')
-	plt.ylabel('Number of nodes')
+	plt.ylabel('Percentage of nodes')
 	title = 'In-Degree and Out-Degree Distributions for {}'.format(inFile)
 	plt.title(title)
 	outGraph = 'stats/{}-degree-distribution.jpg'.format(inFile)
