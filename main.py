@@ -1,4 +1,3 @@
-from __future__ import print_function
 from sampleDURW import sample
 from generateStats import graphSampleStatistics,graphStatistics
 import argparse

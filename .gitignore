@@ -1,7 +1,8 @@
-*.edges
-*.txt
 DURW/
 testGraphs/
 stats/
+__pycache__
 *.pyc
 *.pdf
+*.edges
+*.txt

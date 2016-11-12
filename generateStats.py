@@ -1,7 +1,7 @@
-from __future__ import print_function
 import networkx as nx
 import matplotlib.pyplot as plt
 import argparse
+from collections import Counter
 
 #Indicator functions
 def outDegreeIndicator(G, j, node):
@@ -35,7 +35,7 @@ def distributionEstimator(topFunc, G, Gu, selected, inFile, w):
 	n = float(len(selected))
 	#print(n)
 	out_degree = G.out_degree(selected)
-	S = calculateS(Gu, selected, w, n)
+	S = calculateS(G, selected, w, n)
 	out_degree_vals = sorted(set(out_degree.values()))
 	for item in out_degree_vals:
 		ret = 0
@@ -58,8 +58,8 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w):
 	out_degree = distributionEstimator(outDegreeIndicator, origG, sampledG, selected, inFile, w) 
 	in_degree =  distributionEstimator(inDegreeIndicator, origG, sampledG, selected, inFile, w)
 	plt.figure()
-	plt.plot(out_degree.keys(), out_degree.values(), 'ro-')
-	plt.plot(in_degree.keys(), in_degree.values(), 'bv-')
+	plt.plot([float(x) for x in out_degree.keys()], list(out_degree.values()), 'ro-')
+	plt.plot([float(x) for x in in_degree.keys()], list(in_degree.values()), 'bv-')
 	#plt.yscale('log')
 	#plt.xscale('log')
 	plt.legend(['Out-degree', 'In-degree'])
@@ -85,12 +85,14 @@ def graphStatistics(G, inFile, w):
 
 	out_degree = G.out_degree()
 	out_degree_vals = sorted(set(out_degree.values()))
-	out_degree_distr = [out_degree.values().count(x) for x in out_degree_vals]
+	c = Counter(out_degree.values())
+	out_degree_distr = [c[x] for x in out_degree_vals]
 	n1 = float(sum(out_degree_distr))
 	norm_out_degree_distr = [x/n1 for x in out_degree_distr]
 	in_degree = G.in_degree()
 	in_degree_vals = sorted(set(in_degree.values()))
-	in_degree_distr = [in_degree.values().count(x) for x in in_degree_vals]
+	c2 = Counter(in_degree.values())
+	in_degree_distr = [c2[x] for x in in_degree_vals]
 	n2 = float(sum(in_degree_distr))
 	norm_in_degree_distr = [x/n2 for x in in_degree_distr]
 	#print(norm_in_degree_distr)

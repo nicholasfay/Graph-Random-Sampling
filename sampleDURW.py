@@ -1,4 +1,3 @@
-from __future__ import print_function
 from random import choice
 import os
 import networkx as nx
