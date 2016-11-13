@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import argparse
+import powerlaw
 from collections import Counter
 
 #Indicator functions
@@ -47,6 +48,9 @@ def distributionEstimator(topFunc, G, Gu, selected, inFile, w):
 		phi[item] = ret
 	return phi
 
+#TODO: Should 0's be excluded in this distribution?
+#and should my y values be used?
+
 
 #Computes out_degree distribution, in_degree distribution
 #and clustering coefficient of sampled graph after DURW
@@ -58,10 +62,14 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w):
 	out_degree = distributionEstimator(outDegreeIndicator, origG, sampledG, selected, inFile, w) 
 	in_degree =  distributionEstimator(inDegreeIndicator, origG, sampledG, selected, inFile, w)
 	plt.figure()
-	plt.plot([float(x) for x in out_degree.keys()], list(out_degree.values()), 'ro-')
-	plt.plot([float(x) for x in in_degree.keys()], list(in_degree.values()), 'bv-')
-	#plt.yscale('log')
-	#plt.xscale('log')
+	outKeys = [float(x) for x in out_degree.keys()]
+	outVals = list(out_degree.values())
+	inKeys = [float(x) for x in in_degree.keys()]
+	inVals = list(in_degree.values())
+	plt.plot(outKeys, outVals, 'ro-')
+	fit = powerlaw.Fit(outKeys)
+	print("Alpha 1: {}".format(fit.alpha))
+	plt.plot(inKeys, inVals, 'bv-')
 	plt.legend(['Out-degree', 'In-degree'])
 	plt.xlabel('Degree')
 	plt.ylabel('Percentage of nodes')
@@ -96,6 +104,8 @@ def graphStatistics(G, inFile, w):
 	n2 = float(sum(in_degree_distr))
 	norm_in_degree_distr = [x/n2 for x in in_degree_distr]
 	#print(norm_in_degree_distr)
+	fit = powerlaw.Fit(out_degree_vals)
+	print("Alpha 2: {}".format(fit.alpha))
 	plt.figure()
 	plt.plot(out_degree_vals, norm_out_degree_distr, 'ro-')
 	plt.plot(in_degree_vals, norm_in_degree_distr, 'bv-')
