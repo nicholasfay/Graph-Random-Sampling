@@ -1,4 +1,5 @@
 from random import choice
+from categorical import Categorical as C
 import os
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ import sys
 # current edges that are within the undirected graph
 
 
-def generateProbArray(Gu, v, selected, edgelist):
+def generateProbArray(v, selected, edgelist):
     ret = []
     sum1 = 0
     for edge in edgelist:
@@ -26,29 +27,33 @@ def generateProbArray(Gu, v, selected, edgelist):
     #return [x / float(sum1) for x in ret]
 
 
-def pickNextNode(Gu, G1, v, selected, edgelist):
+def pickNextNode(selected, edgelist, uni, nodes):
     # Picking next node to sample using calculated distribution from
     # generateProbArray above
-    prob = generateProbArray(Gu, v, selected, edgelist)
-    idx = rnd.choice(len(edgelist), p=prob)
+    #prob = generateProbArray(v, selected, edgelist)
+    scores = [x[2]['weight']for x in edgelist]
+    my_sampler = C(scores)
+    idx = my_sampler.sample()
+    #idx = rnd.choice(len(edgelist), p=prob)
     picked_node = edgelist[idx][1]
     while(picked_node in selected or picked_node == 'virtNode'):
         if(picked_node == 'virtNode'):
-            picked_node = rnd.choice(G1.nodes())
+            idx2 = uni.sample()
+            picked_node = nodes[idx2]
             continue
-        idx = rnd.choice(len(edgelist), p=prob)
+        idx = my_sampler.sample()
         picked_node = edgelist[idx][1]
     return picked_node
 
-
-#TODO: Need to check edge case of when the neighbors list is empty (sink node has been chosen) Currently not checking after neighbors have been filtered
 
 def sample(G1, outFileG, outFileP, iternum, weight, count):
     # Needed since added edges also add the end node to the graph
     # and an indicator to only sampled nodes need to be kept
     selected = set()
+    percent = 10
+    nodes = G1.nodes()
     # Not possible to sample more nodes than given
-    if iternum > len(G1.nodes()):
+    if iternum > len(nodes):
         sys.exit("Trying to sample more nodes than are given")
     # Directed Sampling Algorithm Begin
     # Assume that converging Gi (graph at ith step) to infinity gets you Gu
@@ -58,8 +63,9 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
     virtNode = 'virtNode'
 
     # Use choice to select a random node from the set of all nodes in the graph
-    v = choice(G1.nodes())
+    v = choice(nodes)
     selected.add(v)
+    uni_sampler = C(np.ones(len(nodes)))
     # iternum is how many sampling steps do you want to make
     # this starts at G-0 and goes to G-iternum
     for i in range(0, iternum):
@@ -79,18 +85,13 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
         # edges indices
         # Picking next node to sample using uniform distribution above across
         # all edges
-        v = pickNextNode(Gu, G1, v, selected, Nv)
-
-        '''# Check that this node hasn't been selected before
-        while(picked_node in selected or picked_node == 'virtNode'):
-            if(picked_node == 'virtNode'):
-                picked_node = rnd.choice(G1.nodes())
-                continue
-            picked_node = pickNextNode(Gu, v, selected, Nv)'''
-        # v = picked_node
+        v = pickNextNode(selected, Nv, uni_sampler, nodes)
         # NOTE: For some reason int(v) needed to be used because picked_node was sometimes a string
         # and sometimes an integer which was breaking the out_degree function
         selected.add(int(v))
+        if (float(len(selected)) / iternum) * 100 > percent:
+            print('Done sampling {} percent', percent)
+            percent = percent + 10
         # print(selected)
 
     # Exports the original graph (G1) and sampled graph (Gu) to a serialized

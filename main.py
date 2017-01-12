@@ -18,7 +18,7 @@ def main():
                         help='Whether or not output gpickles of graphs are wanted (May be very taxing with huge graphs)')
     parser.add_argument('-oP', '--outFileP', type=bool, default=False,
                         help='Whether or not output images of graphs are wanted (May be very taxing with huge graphs)')
-    parser.add_argument('-it', '--iternum', type=int, default=10000,
+    parser.add_argument('-it', '--iternum', type=int, default=200000,
                         help='Number of nodes sampled - Default is 20')
     parser.add_argument('-bw', '--bweight', type=float, default=1,
                         help='Weight of edges to determine frequency of random jumps (1:less -->  inf:more, w>0) - default is 1')
