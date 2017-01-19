@@ -8,24 +8,6 @@ import numpy as np
 import argparse
 import sys
 
-# This function implements the next node probability distribution calculations
-# It takes the graph and the current node, then calculates a distribution for all
-# current edges that are within the undirected graph
-
-
-def generateProbArray(v, selected, edgelist):
-    ret = []
-    sum1 = 0
-    for edge in edgelist:
-        prob = edge[2]['weight']
-        sum1 += prob
-        ret.append(prob)
-    # normalize the distribution to allow for probability to equal to 1
-    dividend = np.ones(len(ret)) * sum1
-    result = ret / dividend
-    return result
-    #return [x / float(sum1) for x in ret]
-
 
 def pickNextNode(selected, edgelist, uni, nodes):
     # Picking next node to sample using calculated distribution from

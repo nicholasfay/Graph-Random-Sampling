@@ -26,7 +26,7 @@ def main():
                         help='Amount to increment w by for each iteration of sampling')
     parser.add_argument('-amt', '--amount', type=int, default=1,
                         help='Amount of iterations for different samplings based on increment amount')
-    parser.add_argument('-ws', '--wset', nargs='+', type=int, default=[False],
+    parser.add_argument('-ws', '--wset', nargs='+', type=float, default=[False],
                         help='Amount of iterations for different samplings based on increment amount')
     args = parser.parse_args()
 
@@ -68,7 +68,7 @@ def main():
 
             print("Done Processing Input File")
             sys.stdout.flush()
-            graphStatistics(G1, file.split('.')[0])
+            outdegreedistr = graphStatistics(G1, file.split('.')[0])
             for i in range(0, end):
                 if args.wset[0] is False:
                     if count == 0:
@@ -85,7 +85,7 @@ def main():
                 print('I made it after the sampling')
                 sys.stdout.flush()
                 graphSampleStatistics(G1, graphs[0], graphs[
-                                      1], file.split('.')[0], weight)
+                                      1], file.split('.')[0], weight, outdegreedistr)
                 print('Graphed sample statistics')
                 sys.stdout.flush()
             count = 0

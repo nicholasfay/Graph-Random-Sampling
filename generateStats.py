@@ -5,6 +5,11 @@ import argparse
 import powerlaw
 from collections import Counter
 
+
+def calculateNMSE(outd1, outd2):
+    print(len(outd1))
+    print(len(outd2))
+
 # Indicator functions
 
 
@@ -80,7 +85,7 @@ def distributionEstimatorIn(indegreeDict, dd, dd2, selected, inFile, w):
 
 # Computes out_degree distribution, in_degree distribution
 # and clustering coefficient of sampled graph after DURW
-def graphSampleStatistics(origG, sampledG, selected, inFile, w):
+def graphSampleStatistics(origG, sampledG, selected, inFile, w, outdegree):
     outName = 'stats/stats-{}-sample-w{}.txt'.format(inFile, str(w))
     outFile = open(outName, 'w')
     print('Statistics for input graph sample-{}-w{}'.format(inFile, str(w)), file=outFile)
@@ -89,9 +94,6 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w):
     id = origG.in_degree(selected)
     dd = origG.degree(selected)
     dd2 = sampledG.degree(selected)
-
-    print(len(dd2.keys()))
-    print(len(selected))
     out_degree = distributionEstimatorOut(
         od, dd, dd2, selected, inFile, w)
     in_degree = distributionEstimatorIn(
@@ -113,7 +115,7 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w):
     plt.ylabel('Percentage of nodes')
     title = 'In-Degree and Out-Degree Distributions for {}'.format(inFile)
     plt.title(title)
-    outGraph = 'stats/{}-degree-distribution-sample2.jpg'.format(inFile)
+    outGraph = 'stats/{}-degree-distribution-sample-{}.jpg'.format(inFile, w)
     plt.savefig(outGraph)
     plt.close()
 
@@ -121,6 +123,8 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w):
     print('Clustering Coefficient:', file=outFile)
     cluster = nx.average_clustering(sampledG)
     print(cluster, file=outFile)
+
+    calculateNMSE(outdegree, out_degree.values())
 
 # Computes out_degree distribution, in_degree distribution
 # and clustering coefficient of unsampled graph
@@ -137,16 +141,15 @@ def graphStatistics(G, inFile):
     out_degree_distr = [c[x] for x in out_degree_vals]
     n1 = float(sum(out_degree_distr))
     n1A = np.ones(len(out_degree_distr)) * n1
-    norm_out_degree_distr = np.array(out_degree_distr) / n1A
+    norm_out_degree_distr = out_degree_distr / n1A
     in_degree = G.in_degree()
     in_degree_vals = sorted(set(in_degree.values()))
     c2 = Counter(in_degree.values())
     in_degree_distr = [c2[x] for x in in_degree_vals]
     n2 = float(sum(in_degree_distr))
     n2A = np.ones(len(in_degree_distr)) * n2
-    norm_in_degree_distr = np.array(in_degree_distr) / n2A
+    norm_in_degree_distr = in_degree_distr / n2A
     # print(norm_in_degree_distr)
-    out_degree_vals.remove(0)
     fit = powerlaw.Fit(out_degree_vals)
     print("Alpha 2: {}".format(fit.alpha))
     plt.figure()
@@ -164,9 +167,11 @@ def graphStatistics(G, inFile):
     plt.close()
 
     print('In-Degree and Out-Degree have been plotted and saved at {}'.format(outGraph), file=outFile)
-    #cluster = nx.average_clustering(G.to_undirected())
-    #print('Clustering Coefficient:', file=outFile)
-    #print(cluster, file=outFile)
+    cluster = nx.average_clustering(G.to_undirected())
+    print('Clustering Coefficient:', file=outFile)
+    print(cluster, file=outFile)
+
+    return out_degree_distr
 
 
 if __name__ == '__main__':
