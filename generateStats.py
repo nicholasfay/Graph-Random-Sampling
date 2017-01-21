@@ -7,8 +7,20 @@ from collections import Counter
 
 
 def calculateNMSE(outd1, outd2):
-    print(len(outd1))
-    print(len(outd2))
+    #outd1 and outd2 should be of form
+    #{out-degreeVal : countWval}
+    NMSE = {0 : 0}
+    '''for key,val in outd2.items():
+        out = 0
+        if outd1.find(key):
+            out = outd1[key]
+        sub = val - out
+        sqsub = sub ** 2
+        #expected = expected(sqsub)
+        root = expected ** (1 / 2)
+        NMSE[key] = root / val'''
+    return NMSE
+
 
 # Indicator functions
 
@@ -29,9 +41,6 @@ def inDegreeIndicator(indegree, j, node):
 
 def calculateS(degree, selected, w, n):
     ret = 0
-    # Weird error that happens sometimes here, says that
-    # some of the nodes in the selected nodes aren't nodes in
-    # the sampled graph
     for item in selected:
         added = 0
         if item in degree:
@@ -124,7 +133,8 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w, outdegree):
     cluster = nx.average_clustering(sampledG)
     print(cluster, file=outFile)'''
 
-    calculateNMSE(outdegree, out_degree.values())
+    NMSE = calculateNMSE(outdegree, out_degree.values())
+    return NMSE
 
 # Computes out_degree distribution, in_degree distribution
 # and clustering coefficient of unsampled graph

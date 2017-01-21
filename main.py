@@ -69,6 +69,7 @@ def main():
             print("Done Processing Input File")
             sys.stdout.flush()
             outdegreedistr = graphStatistics(G1, file.split('.')[0])
+            NMSEContainer = {}
             for i in range(0, end):
                 if args.wset[0] is False:
                     if count == 0:
@@ -84,7 +85,7 @@ def main():
                                 args.iternum, weight, count)
                 print('I made it after the sampling')
                 sys.stdout.flush()
-                graphSampleStatistics(G1, graphs[0], graphs[
+                NMSEContainer[weight] = graphSampleStatistics(G1, graphs[0], graphs[
                                       1], file.split('.')[0], weight, outdegreedistr)
                 print('Graphed sample statistics')
                 sys.stdout.flush()
