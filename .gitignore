@@ -1,5 +1,6 @@
 DURW/
 testGraphs/
+statsArchive/
 stats/
 __pycache__
 *.pyc

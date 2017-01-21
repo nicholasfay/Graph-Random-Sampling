@@ -3,7 +3,6 @@ from categorical import Categorical as C
 import os
 import networkx as nx
 import matplotlib.pyplot as plt
-import numpy.random as rnd
 import numpy as np
 import argparse
 import sys
@@ -11,13 +10,15 @@ import sys
 
 def pickNextNode(selected, edgelist, uni, nodes):
     # Picking next node to sample using calculated distribution from
-    # generateProbArray above
-    #prob = generateProbArray(v, selected, edgelist)
+    # categorical sampler object, .sample() returns an index
     scores = [x[2]['weight']for x in edgelist]
     my_sampler = C(scores)
     idx = my_sampler.sample()
     #idx = rnd.choice(len(edgelist), p=prob)
     picked_node = edgelist[idx][1]
+    #Deals with if the picked node has already been sampled or
+    #it is the virtual node which represents a uniform jump to
+    #another random node in the original graph
     while(picked_node in selected or picked_node == 'virtNode'):
         if(picked_node == 'virtNode'):
             idx2 = uni.sample()
@@ -47,6 +48,8 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
     # Use choice to select a random node from the set of all nodes in the graph
     v = choice(nodes)
     selected.add(v)
+    #Uniform node sampler that is only created once then used when necessary
+    #returns the index of the uniformly choosen node
     uni_sampler = C(np.ones(len(nodes)))
     # iternum is how many sampling steps do you want to make
     # this starts at G-0 and goes to G-iternum
@@ -61,20 +64,16 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
         Nv = [x for x in Nv if not x[1] in selected]
         Gu.add_edges_from(Nv)
         Gu.add_edge(v, virtNode, weight=weight)
-        # print(Gu.edges())
 
         # Randomly choose a number from a uniform distribution across the
         # edges indices
         # Picking next node to sample using uniform distribution above across
         # all edges
         v = pickNextNode(selected, Nv, uni_sampler, nodes)
-        # NOTE: For some reason int(v) needed to be used because picked_node was sometimes a string
-        # and sometimes an integer which was breaking the out_degree function
         selected.add(int(v))
         if (float(len(selected)) / iternum) * 100 > percent:
             print('Done sampling {} percent', percent)
             percent = percent + 10
-        # print(selected)
 
     # Exports the original graph (G1) and sampled graph (Gu) to a serialized
     # GPickle

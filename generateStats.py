@@ -108,7 +108,7 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w, outdegree):
     plt.plot(outKeys, outVals, 'ro-')
     outKeys.remove(0)
     fit = powerlaw.Fit(outKeys)
-    print("Alpha 1: {}".format(fit.alpha))
+    print("Clustering Coefficient 2: {}".format(fit.alpha), file=outFile)
     plt.plot(inKeys, inVals, 'bv-')
     plt.legend(['Out-degree', 'In-degree'])
     plt.xlabel('Degree')
@@ -119,10 +119,10 @@ def graphSampleStatistics(origG, sampledG, selected, inFile, w, outdegree):
     plt.savefig(outGraph)
     plt.close()
 
-    print('In-Degree and Out-Degree have been plotted and saved at {}'.format(outGraph), file=outFile)
+    '''print('In-Degree and Out-Degree have been plotted and saved at {}'.format(outGraph), file=outFile)
     print('Clustering Coefficient:', file=outFile)
     cluster = nx.average_clustering(sampledG)
-    print(cluster, file=outFile)
+    print(cluster, file=outFile)'''
 
     calculateNMSE(outdegree, out_degree.values())
 
@@ -150,11 +150,12 @@ def graphStatistics(G, inFile):
     n2A = np.ones(len(in_degree_distr)) * n2
     norm_in_degree_distr = in_degree_distr / n2A
     # print(norm_in_degree_distr)
-    fit = powerlaw.Fit(out_degree_vals)
-    print("Alpha 2: {}".format(fit.alpha))
     plt.figure()
     plt.plot(out_degree_vals, norm_out_degree_distr, 'ro-')
     plt.plot(in_degree_vals, norm_in_degree_distr, 'bv-')
+    out_degree_vals.remove(0)
+    fit = powerlaw.Fit(out_degree_vals)
+    print("Clustering Coefficient 1: {}".format(fit.alpha), file=outFile)
     plt.yscale('log')
     plt.xscale('log')
     plt.legend(['Out-degree', 'In-degree'])
@@ -166,10 +167,10 @@ def graphStatistics(G, inFile):
     plt.savefig(outGraph)
     plt.close()
 
-    print('In-Degree and Out-Degree have been plotted and saved at {}'.format(outGraph), file=outFile)
+    '''print('In-Degree and Out-Degree have been plotted and saved at {}'.format(outGraph), file=outFile)
     cluster = nx.average_clustering(G.to_undirected())
     print('Clustering Coefficient:', file=outFile)
-    print(cluster, file=outFile)
+    print(cluster, file=outFile)'''
 
     return out_degree_distr
 
