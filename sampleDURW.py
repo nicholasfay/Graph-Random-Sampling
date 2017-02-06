@@ -16,6 +16,10 @@ def pickNextNode(selected, edgelist, uni, nodes):
     idx = my_sampler.sample()
     #idx = rnd.choice(len(edgelist), p=prob)
     picked_node = edgelist[idx][1]
+    if picked_node == 'virtNode':
+        temp = 0
+    else:
+        temp = 1
     #Deals with if the picked node has already been sampled or
     #it is the virtual node which represents a uniform jump to
     #another random node in the original graph
@@ -26,7 +30,7 @@ def pickNextNode(selected, edgelist, uni, nodes):
             continue
         idx = my_sampler.sample()
         picked_node = edgelist[idx][1]
-    return picked_node
+    return picked_node, temp
 
 
 def sample(G1, outFileG, outFileP, iternum, weight, count):
@@ -49,8 +53,10 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
     v = choice(nodes)
     selected.add(v)
     #Uniform node sampler that is only created once then used when necessary
-    #returns the index of the uniformly choosen node
+    #returns the index of the uniformly chosen node
     uni_sampler = C(np.ones(len(nodes)))
+    jump = 0
+    walk = 0
     # iternum is how many sampling steps do you want to make
     # this starts at G-0 and goes to G-iternum
     for i in range(0, iternum):
@@ -69,12 +75,18 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
         # edges indices
         # Picking next node to sample using uniform distribution above across
         # all edges
-        v = pickNextNode(selected, Nv, uni_sampler, nodes)
+        v, t = pickNextNode(selected, Nv, uni_sampler, nodes)
+        if t == 0:
+            jump += 1
+        else:
+            walk += 1
         selected.add(int(v))
         if (float(len(selected)) / iternum) * 100 > percent:
             print('Done sampling {} percent', percent)
             percent = percent + 10
 
+    outFileTest = open("stats/jumpVwalk.txt", 'a')
+    print("Jump {} Walk {}\n".format(jump, walk), file=outFileTest)
     # Exports the original graph (G1) and sampled graph (Gu) to a serialized
     # GPickle
     if(outFileG):

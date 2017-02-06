@@ -2,7 +2,9 @@ from sampleDURW import sample
 from generateStats import graphSampleStatistics, graphStatistics
 import argparse
 import os
+import numpy as np
 import sys
+import matplotlib.pyplot as plt
 import networkx as nx
 from datetime import datetime
 startTime = datetime.now()
@@ -69,14 +71,15 @@ def main():
             print("Done Processing Input File")
             sys.stdout.flush()
             outdegreedistr = graphStatistics(G1, file.split('.')[0])
-            NMSEContainer = {}
+            nmse = []
+            degrees = []
             for i in range(0, end):
                 if args.wset[0] is False:
                     if count == 0:
                         weight = args.bweight
+                        #count += 1
                     else:
                         weight = weight + args.increment
-                        count += 1
                 else:
                     weight = args.wset[count]
                     count += 1
@@ -85,11 +88,30 @@ def main():
                                 args.iternum, weight, count)
                 print('I made it after the sampling')
                 sys.stdout.flush()
-                NMSEContainer[weight] = graphSampleStatistics(G1, graphs[0], graphs[
+                n,d = graphSampleStatistics(G1, graphs[0], graphs[
                                       1], file.split('.')[0], weight, outdegreedistr)
+                nmse.append(n)
+                degrees.append(d)
                 print('Graphed sample statistics')
                 sys.stdout.flush()
             count = 0
+            temp1 = np.array(nmse)
+            temp2 = np.array(degrees)
+            avg1 = temp1.mean(axis=0)
+            avg2 = temp2.mean(axis=0)
+            print(avg1)
+            print(avg2)
+            plt.figure()
+            plt.yscale('log')
+            plt.xscale('log')
+            plt.plot(avg2, avg1, 'ro-')
+            plt.xlabel('Degree')
+            plt.ylabel('NMSE')
+            title = 'NMSE vs OutDegree for {}'.format(inFile)
+            plt.title(title)
+            outGraph = 'stats/test2.jpg'.format(file.split('.')[0], weight)
+            plt.savefig(outGraph)
+            plt.close()
             print(datetime.now() - startTime)
     else:
         print("Input Directory Doesn't Exist - Insert New Directory")
