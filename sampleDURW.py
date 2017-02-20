@@ -50,7 +50,8 @@ def sample(G1, outFileG, outFileP, iternum, weight, count):
     virtNode = 'virtNode'
 
     # Use choice to select a random node from the set of all nodes in the graph
-    v = choice(nodes)
+    #v = choice(nodes)
+    v = 3215
     selected.add(v)
     #Uniform node sampler that is only created once then used when necessary
     #returns the index of the uniformly chosen node

@@ -6,6 +6,7 @@ import numpy as np
 import sys
 import matplotlib.pyplot as plt
 import networkx as nx
+import operator
 from datetime import datetime
 startTime = datetime.now()
 
@@ -70,6 +71,10 @@ def main():
 
             print("Done Processing Input File")
             sys.stdout.flush()
+            '''outdegree = G1.out_degree()
+            max1 = max(outdegree, key=lambda k: outdegree[k])
+            print(max1)
+            sys.stdout.flush()'''
             outdegreedistr = graphStatistics(G1, file.split('.')[0])
             nmse = []
             degrees = []
@@ -109,7 +114,7 @@ def main():
             plt.ylabel('NMSE')
             title = 'NMSE vs OutDegree for {}'.format(inFile)
             plt.title(title)
-            outGraph = 'stats/test2.jpg'.format(file.split('.')[0], weight)
+            outGraph = 'stats/test3.jpg'.format(file.split('.')[0], weight)
             plt.savefig(outGraph)
             plt.close()
             print(datetime.now() - startTime)

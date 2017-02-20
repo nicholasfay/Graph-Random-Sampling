@@ -117,7 +117,7 @@ def distributionEstimatorIn(indegreeDict, dd, dd2, selected, inFile, w):
         ret = 0
         for item2 in selected:
             indicator = inDegreeIndicator(indegreeDict, item, item2)
-            pi = piFunc(dd, item2, w)
+            pi = piFunc(dd2, item2, w)
             pi = pi * S
             ret += (indicator / pi)
         ret = ret / n
