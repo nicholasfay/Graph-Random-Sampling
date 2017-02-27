@@ -29,8 +29,9 @@ def findNodesToCollect(G, Gsample, toNav, w):
         if nodes[N1]['collected']:
             #Add nodes to sample from
             Gsample.add_edges_from(G.out_edges([N1], data=True))
-            G[N1]['sampled'] = True
+            G.node[N1]['sampled'] = True
             nextaction, nextnode = DURW(G, N1, w)
+            #Adds the new node to the navigation queue at the top of the queue
             if nextaction is 'navigate':
                 toNav.appendleft(nextnode)
             elif nextaction is 'randomJump':
@@ -87,10 +88,10 @@ def main():
     #Initial sample graph
     Gsample = nx.Graph()
 
-    #Unvisited Nodes (can add seed indicator here if needed)
+    #Unvisited Nodes with seed indicator added and collected inidcator added
     G = nx.DiGraph()
     for node in seed:
-        G.add_node(node, collected=False, seed=True)
+        G.add_node(node, collected=False, seed=True, sampled=False)
 
     #Set of K random nodes specified by user
     IS = np.random.choice(seed, args.kval)
@@ -113,12 +114,12 @@ def main():
             toNav = findNodesToCollect(G, Gsample, toNav, args.weight)
             if len(Gsample.nodes()) == args.numnodes:
                 finished = True
-            #Currently finding the union of IS and toNav
-            IS = list(set(IS) | set(toNav))
+            #Set the collected nodes 
+            IS = toNav
             if len(IS) < args.kval:
                 k1 = args.kval - len(IS)
                 #Filters out nodes in original seed that have already been collected or sampled
-                filterseed = [k for k in seed if G[k]['collected'] is False and G[k]['sampled'] is False]
+                filterseed = [k for k in seed if G.node[k]['collected'] is False and G.node[k]['sampled'] is False]
                 #Selects k1 new random nodes
                 newNodes = np.random.choice(filterseed, k1)
 
