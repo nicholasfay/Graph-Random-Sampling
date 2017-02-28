@@ -7,38 +7,67 @@ from collections import deque
 
 startTime = datetime.now()
 
+debug = open("test.txt", 'w')
+
+def labelNode(G, v):
+    if 'collected' not in G.node[v]:
+        G.node[v]['collected'] = False
+    if 'sampled' not in G.node[v]:
+        G.node[v]['sampled'] = False
+    if 'seed' not in G.node[v]:
+        G.node[v]['seed'] = False
+    return G
+
+
 def DURW(G, N1, w):
     outedges = G.out_edges([N1])
     probarray = np.ones(len(outedges))
     #Dynamic random jump probability and -1 to represent virtual node
     outedges.append(-1)
-    probarray.append(w)
+    #probarray.append(w)
+    #print(probarray)
+    probarray = np.append(probarray, w)
+    sumprob = np.sum(probarray)
+    divisor = np.ones(len(probarray)) * sumprob
+    probarray = probarray / divisor
+    #print(probarray)
+    #print("{} outedges length {} probarray length".format(len(outedges), len(probarray)))
     choice = np.random.choice(outedges, 1, p=probarray)
-    print(choice)
-    if choice == -1:
+    #print(choice)
+    if choice[0] == -1:
         return 'randomJump', None
     else:
-        return 'navigate', choice
+        return 'navigate', choice[0][1]
 
 def findNodesToCollect(G, Gsample, toNav, w):
     newNav = deque()
-    nodes = G.nodes()
     while(toNav):
         #Pop left assumes FIFO is desired behavior
         N1 = toNav.popleft()
-        if nodes[N1]['collected']:
+        #print(type(G.node))
+        if G.node[N1]['collected']:
             #Add nodes to sample from
             Gsample.add_edges_from(G.out_edges([N1], data=True))
             G.node[N1]['sampled'] = True
+            G = labelNode(G, N1)
             nextaction, nextnode = DURW(G, N1, w)
             #Adds the new node to the navigation queue at the top of the queue
             if nextaction is 'navigate':
                 toNav.appendleft(nextnode)
+                print("Nav")
             elif nextaction is 'randomJump':
                 #makes sure that new jump only is a collected, not sampled, seed node
-                collectedseed = [k for k in nodes if k['collected'] is True and k['sampled'] is False and k['seed'] is True]
+                #print(G.node.items())
+                #for k,attrdict in G.node.items():
+                #   print("{} k {} attrdict".format(k, attrdict), file=debug)
+                collectedseed = [k for k,attrdict in G.node.items() if attrdict['collected'] is True and attrdict['sampled'] is False and attrdict['seed'] is True]
+                if not collectedseed:
+                    break
                 N2 = np.random.choice(collectedseed, 1)
-                toNav.appendleft(N2)
+                #print(type(N2))
+                #print(type(N2[0]))
+                print("RJ")
+                toNav.appendleft(N2[0])
             else:
                 print("Didn't get proper return")
         else:
@@ -61,7 +90,6 @@ def main():
     if not args.testgraphf and args.stream:
         print("Please supply test graph to substitue streaming capabilities")
         sys.exit()
-
     #Random Seed Input
     seed = []
     with open(args.seedf) as f:
@@ -81,6 +109,10 @@ def main():
                 node2 = int(edge[1])
                 # Add edges as they are parsed
                 testG.add_edge(node1, node2, weight=1)
+        #print("This is testG length {} and this is numnodes {}".format(len(testG.nodes()), int(args.numnodes)))
+        if(len(testG.nodes()) <= int(args.numnodes)):
+            print("Can't sample more nodes than the graph provided has.")
+            sys.exit()
     else:
         print("Need test graph without streaming capabilities enabled")
         sys.exit()
@@ -96,9 +128,8 @@ def main():
     #Set of K random nodes specified by user
     IS = np.random.choice(seed, args.kval)
 
-    #Nodes that need to be navigated
+    #Nodes that need to be navigated TODO: How does toNav ever have anything within the queue? navigations are unknown until labeled so and find_nodes_to_collect relies on this being not empty should I just add initial seed nodes?
     toNav = deque()
-
     #Continuous sampling function
     finished = False
     while(not finished):
@@ -108,20 +139,40 @@ def main():
         else:
             #Edge collection of each node in IS
             for node in IS:
-                G.add_edges_from(testG.out_edges([node], data=True))
+                #TODO: Mark edges that are being added as not collected, not sampled, not seed
+                edges = testG.out_edges([node], data=True)
+                #print(edges)
+                G.add_edges_from(edges)
+                for u, v, data in edges:
+                    G = labelNode(G,v)
                 #Signifies that the node has been collected
                 G.node[node]['collected'] = True
+                G = labelNode(G, node)
+                #set to nav to IS here.
+                toNav.append(node)
+            #toNav = IS
+            #print(toNav)
+            #print(G.node.items(), file=debug)
+            #print("TODODODODODODO", file=debug)
             toNav = findNodesToCollect(G, Gsample, toNav, args.weight)
-            if len(Gsample.nodes()) == args.numnodes:
+            #print("{} Gsample length, {} NN length".format(len(Gsample.nodes()), args.numnodes))
+            #???????Is >= good here since edges being added, there are nodes being added along with it
+            if len(Gsample.nodes()) >= int(args.numnodes):
                 finished = True
-            #Set the collected nodes 
-            IS = toNav
+            #Set the collected nodes
+            IS = np.array(toNav)
             if len(IS) < args.kval:
                 k1 = args.kval - len(IS)
                 #Filters out nodes in original seed that have already been collected or sampled
                 filterseed = [k for k in seed if G.node[k]['collected'] is False and G.node[k]['sampled'] is False]
+                if not filterseed:
+                    break
                 #Selects k1 new random nodes
                 newNodes = np.random.choice(filterseed, k1)
+                #print(IS)
+                #
+                #print(newNodes)
+                IS = np.hstack((IS,newNodes))
 
 
 
