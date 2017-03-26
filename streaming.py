@@ -4,11 +4,38 @@ import argparse
 import sys
 from categorical import Categorical as C
 from datetime import datetime
-from collections import deque
+from collections import deque, Counter
+import matplotlib.pyplot as plt
 
 startTime = datetime.now()
 
 debug = open("test.txt", 'w')
+
+def generateOutDegreeGraph(G, inFile, add, sample):
+    if sample:
+        out_degree = G.out_degree(sample)
+    else:
+        out_degree = G.out_degree()
+    out_degree_vals = sorted(set(out_degree.values()))
+    c = Counter(out_degree.values())
+    out_degree_distr = [c[x] for x in out_degree_vals]
+    temp = np.array(out_degree_distr)
+    mean = temp.mean()
+    n1 = float(sum(out_degree_distr))
+    n1A = np.ones(len(out_degree_distr)) * n1
+    norm_out_degree_distr = out_degree_distr / n1A
+    plt.figure()
+    plt.plot(out_degree_vals, norm_out_degree_distr, 'ro-')
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlabel('Degree')
+    plt.ylabel('Percentage of nodes')
+    title = 'Out-Degree Distribution for {}'.format(inFile)
+    plt.title(title)
+    outGraph = 'stats/{}-{}-degree-distribution.jpg'.format(inFile, add)
+    plt.savefig(outGraph)
+    plt.close()
+
 
 def labelNode(G, v):
     if 'collected' not in G.node[v]:
@@ -22,6 +49,7 @@ def labelNode(G, v):
 
 def DURW(G, N1, w):
     outedges = G.out_edges([N1])
+    #filter outedges for ones that have a v value that is already sampled/collected
     probarray = np.ones(len(outedges))
     #Dynamic random jump probability and -1 to represent virtual node
     outedges.append(-1)
@@ -128,7 +156,7 @@ def main():
         sys.exit()
 
     #Initial sample graph
-    Gsample = nx.Graph()
+    Gsample = nx.DiGraph()
 
     #Unvisited Nodes with seed indicator added and collected inidcator added
     G = nx.DiGraph()
@@ -167,16 +195,20 @@ def main():
             toNav = findNodesToCollect(G, Gsample, toNav, args.weight)
             #print("{} Gsample length, {} NN length".format(len(Gsample.nodes()), args.numnodes))
             #???????Is >= good here since edges being added, there are nodes being added along with it
+            sampled = [n for n,attrdict in G.node.items() if attrdict['sampled'] == True ]
             if len(Gsample.nodes()) >= int(args.numnodes):
                 finished = True
+                generateOutDegreeGraph(Gsample, args.testgraphf, "sample", sampled)
+                generateOutDegreeGraph(G, args.testgraphf, "collected", None)
+                generateOutDegreeGraph(testG, args.testgraphf, "test", None)
             #Set the collected nodes
             IS = np.array(toNav)
             if len(IS) < args.kval:
                 k1 = args.kval - len(IS)
                 #Filters out nodes in original seed that have already been collected or sampled
                 filterseed = [k for k in seed if G.node[k]['collected'] is False and G.node[k]['sampled'] is False]
-                if not filterseed:
-                    break
+                #if not filterseed:
+                 #   continue
                 #Selects k1 new random nodes
                 newNodes = np.random.choice(filterseed, k1)
                 #print(IS)
