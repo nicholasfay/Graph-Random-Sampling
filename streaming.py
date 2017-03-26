@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 import argparse
 import sys
+from categorical import Categorical as C
 from datetime import datetime
 from collections import deque
 
@@ -33,7 +34,16 @@ def DURW(G, N1, w):
     #print(probarray)
     #print("{} outedges length {} probarray length".format(len(outedges), len(probarray)))
     choice = np.random.choice(outedges, 1, p=probarray)
-    #print(choice)
+
+    if np.random.uniform() < (w / (w + deg)) or len(edgelist) == 0:
+        idx2 = uni.sample()
+        picked_node = nodes[idx2]
+        temp = 0
+    else:
+        my_sampler = C(scores)
+        idx = my_sampler.sample()
+        picked_node = edgelist[idx][1]
+        temp = 1
     if choice[0] == -1:
         return 'randomJump', None
     else:
