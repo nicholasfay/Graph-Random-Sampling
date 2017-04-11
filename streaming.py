@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 startTime = datetime.now()
 
 debug = open("test.txt", 'w')
+budget = 0
 
 def generateOutDegreeGraph(G, inFile, add, sample):
     if sample:
@@ -28,11 +29,12 @@ def generateOutDegreeGraph(G, inFile, add, sample):
     plt.plot(out_degree_vals, norm_out_degree_distr, 'ro-')
     plt.yscale('log')
     plt.xscale('log')
+    plt.xlim([1,(10**6)])
     plt.xlabel('Degree')
     plt.ylabel('Percentage of nodes')
-    title = 'Out-Degree Distribution for {}'.format(inFile)
+    title = 'Streaming Random Sample Out-Degree Distribution for {}'.format(inFile)
     plt.title(title)
-    outGraph = 'stats/{}-{}-degree-distribution.jpg'.format(inFile, add)
+    outGraph = 'stats/{}-{}-degree-distribution-new.jpg'.format(inFile, add)
     plt.savefig(outGraph)
     plt.close()
 
@@ -47,23 +49,39 @@ def labelNode(G, v):
     return G
 
 
-def DURW(G, N1, w):
+def DURW(testG, G, N1, w, indCost):
+    global budget
     outedges = G.out_edges([N1])
+    filteroutedges = [k for k in outedges if not G.node[k[1]]['sampled']]
+    deg = testG.degree(N1)
     #filter outedges for ones that have a v value that is already sampled/collected
-    probarray = np.ones(len(outedges))
+    if np.random.uniform() < (w / (w + deg)) or len(filteroutedges) == 0:
+        budget += indCost
+        return 'randomJump', None
+    else:
+        probarray = np.ones(len(filteroutedges))
+        sampler = C(probarray)
+        idx = sampler.sample()
+        choice = filteroutedges[idx]
+        budget += 1
+        return 'navigate', choice[1]
     #Dynamic random jump probability and -1 to represent virtual node
-    outedges.append(-1)
+    #filteroutedges.append(-1)
     #probarray.append(w)
     #print(probarray)
-    probarray = np.append(probarray, w)
-    sumprob = np.sum(probarray)
+    #probarray = np.append(probarray, w)
+    '''sumprob = np.sum(probarray)
     divisor = np.ones(len(probarray)) * sumprob
-    probarray = probarray / divisor
+    probarray = probarray / divisor'''
     #print(probarray)
     #print("{} outedges length {} probarray length".format(len(outedges), len(probarray)))
-    choice = np.random.choice(outedges, 1, p=probarray)
+    #choice = np.random.choice(filteroutedges, 1, p=probarray)
+    '''sampler = C(probarray)
+    idx = sampler.sample()
+    choice = filteroutedges[idx]
+    print(choice)'''
 
-    if np.random.uniform() < (w / (w + deg)) or len(edgelist) == 0:
+    '''if np.random.uniform() < (w / (w + deg)) or len(edgelist) == 0:
         idx2 = uni.sample()
         picked_node = nodes[idx2]
         temp = 0
@@ -71,13 +89,13 @@ def DURW(G, N1, w):
         my_sampler = C(scores)
         idx = my_sampler.sample()
         picked_node = edgelist[idx][1]
-        temp = 1
-    if choice[0] == -1:
+        temp = 1'''
+    '''if choice[0] == -1:
         return 'randomJump', None
     else:
-        return 'navigate', choice[0][1]
+        return 'navigate', choice[0][1]'''
 
-def findNodesToCollect(G, Gsample, toNav, w):
+def findNodesToCollect(testG, G, Gsample, toNav, w, indCost):
     newNav = deque()
     while(toNav):
         #Pop left assumes FIFO is desired behavior
@@ -88,24 +106,22 @@ def findNodesToCollect(G, Gsample, toNav, w):
             Gsample.add_edges_from(G.out_edges([N1], data=True))
             G.node[N1]['sampled'] = True
             G = labelNode(G, N1)
-            nextaction, nextnode = DURW(G, N1, w)
+            nextaction, nextnode = DURW(testG, G, N1, w, indCost)
             #Adds the new node to the navigation queue at the top of the queue
             if nextaction is 'navigate':
                 toNav.appendleft(nextnode)
-                print("Nav")
+                #print("Nav")
             elif nextaction is 'randomJump':
                 #makes sure that new jump only is a collected, not sampled, seed node
-                #print(G.node.items())
-                #for k,attrdict in G.node.items():
-                #   print("{} k {} attrdict".format(k, attrdict), file=debug)
                 collectedseed = [k for k,attrdict in G.node.items() if attrdict['collected'] is True and attrdict['sampled'] is False and attrdict['seed'] is True]
                 if not collectedseed:
                     break
-                N2 = np.random.choice(collectedseed, 1)
-                #print(type(N2))
-                #print(type(N2[0]))
-                print("RJ")
-                toNav.appendleft(N2[0])
+                else:
+                    unisampler = C(np.ones(len(collectedseed)))
+                    idx = unisampler.sample()
+                N2 = collectedseed[idx]
+                #print("RJ")
+                toNav.appendleft(N2)
             else:
                 print("Didn't get proper return")
         else:
@@ -123,6 +139,8 @@ def main():
     parser.add_argument('-nn', '--numnodes', type=str, required=True, help='File that has random set of nodes for the SEED')
     parser.add_argument('-tg', '--testgraphf', type=str, default=None, help='File for testing without streaming capabilities')
     parser.add_argument('-w', '--weight', type=int, default=10, help='Random Jump Weight')
+    parser.add_argument('-ic', '--indcost', type=int, default=10,
+                        help='Cost for random jump')
 
     args = parser.parse_args()
     if not args.testgraphf and args.stream:
@@ -166,7 +184,6 @@ def main():
     #Set of K random nodes specified by user
     IS = np.random.choice(seed, args.kval)
 
-    #Nodes that need to be navigated TODO: How does toNav ever have anything within the queue? navigations are unknown until labeled so and find_nodes_to_collect relies on this being not empty should I just add initial seed nodes?
     toNav = deque()
     #Continuous sampling function
     finished = False
@@ -177,7 +194,6 @@ def main():
         else:
             #Edge collection of each node in IS
             for node in IS:
-                #TODO: Mark edges that are being added as not collected, not sampled, not seed
                 edges = testG.out_edges([node], data=True)
                 #print(edges)
                 G.add_edges_from(edges)
@@ -188,15 +204,9 @@ def main():
                 G = labelNode(G, node)
                 #set to nav to IS here.
                 toNav.append(node)
-            #toNav = IS
-            #print(toNav)
-            #print(G.node.items(), file=debug)
-            #print("TODODODODODODO", file=debug)
-            toNav = findNodesToCollect(G, Gsample, toNav, args.weight)
-            #print("{} Gsample length, {} NN length".format(len(Gsample.nodes()), args.numnodes))
-            #???????Is >= good here since edges being added, there are nodes being added along with it
-            sampled = [n for n,attrdict in G.node.items() if attrdict['sampled'] == True ]
-            if len(Gsample.nodes()) >= int(args.numnodes):
+            toNav = findNodesToCollect(testG, G, Gsample, toNav, args.weight, args.indcost)
+            sampled = [n for n,attrdict in G.node.items() if attrdict['sampled'] is True ]
+            if budget >= int(args.numnodes):
                 finished = True
                 generateOutDegreeGraph(Gsample, args.testgraphf, "sample", sampled)
                 generateOutDegreeGraph(G, args.testgraphf, "collected", None)

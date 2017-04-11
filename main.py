@@ -10,6 +10,12 @@ import operator
 from datetime import datetime
 startTime = datetime.now()
 
+def findNextNum(index, array):
+    for i in range(index, len(array)):
+        if not array[i] is 0:
+            return array[i]
+
+
 
 def main():
     # Argument parsing for various options
@@ -105,10 +111,14 @@ def main():
             plt.figure()
             plt.yscale('log')
             plt.xscale('log')
+            for i in range(len(avg1)):
+                if avg1[i] == 0:
+                    nextT = findNextNum(i, avg1)
+                    avg1[i] = nextT
             plt.plot(avg2, avg1, 'ro-')
             plt.xlabel('Degree')
             plt.ylabel('NMSE')
-            title = 'NMSE vs OutDegree for {}'.format(inFile)
+            title = 'NMSE vs OutDegree for WikiTalk'.format(inFile)
             plt.title(title)
             outGraph = 'stats/final.jpg'.format(file.split('.')[0], weight)
             plt.savefig(outGraph)
